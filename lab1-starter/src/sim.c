@@ -9,35 +9,90 @@ void process_instruction()
      * access memory. */
 
     printf("%d\n", CURRENT_STATE.PC);
-    uint32_t pc = mem_read_32(CURRENT_STATE.PC); //smth about 32-bit alignment
-    uint32_t op = pc >> 26;
-    printf("%0x\n", op);
+    int pc = mem_read_32(CURRENT_STATE.PC); //smth about 32-bit alignment
+    int op = pc >> 26;
+    printf("The Opcode is: %0x\n", op);
 
-    if (op == 0) {
-        //R-TYPE instructions
+    if (op == 0) { //R-TYPE instructions
+        int function = pc << 26;
+        int rs = (pc >> 21) & 0x1F;
+        int rt = (pc >> 16) & 0x1F;
+        int rd = (pc >> 11) & 0x1F;
+        int sa = (pc >> 6) & 0x1F;
+
+        if (function == 0x20) { //ADD
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x21) { //ADDU
+            unsigned int temp = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
+            NEXT_STATE.REGS[rd] = temp;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x24) { //AND
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] & CURRENT_STATE.REGS[rt];
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
     }
+
     else { //NOT R-TYPE instructions 
         int rs = (pc >> 21) & 0x1F;
         int rt = (pc >> 16) & 0x1F;
-        uint16_t imm = pc & 0xFFFF;
+        unsigned short imm = pc & 0xFFFF;
 
         if (op == 0x8) { //ADDI
-            NEXT_STATE.REGS[rt] = NEXT_STATE.REGS[rt] + imm;
-            NEXT_STATE.PC = NEXT_STATE.PC + 4;
+            NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + imm;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
         else if (op == 0x9) { //ADDIU
-            NEXT_STATE.REGS[rt] = NEXT_STATE.REGS[rt] + imm;
-            NEXT_STATE.PC = NEXT_STATE.PC + 4;
+            unsigned int temp = CURRENT_STATE.REGS[rs] + imm;
+            NEXT_STATE.REGS[rt] = temp;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (op == 0xC) { //ANDI
+            NEXT_STATE.REGS[rt] = 0 || (imm & CURRENT_STATE.REGS[rs]);
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (op == 0x4) { //BEQ
+            if (CURRENT_STATE.REGS[rs] == CURRENT_STATE.REGS[rt]) {
+                short target = (short)imm;
+                target = target << 2;
+                NEXT_STATE.PC = CURRENT_STATE.PC + target; 
+            }
+            else {
+                NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+            }
+        }
+        else if (op == 0x1 & rt == 0x1) { //BGEZ
+            int shifted = CURRENT_STATE.REGS[rs] >> 31;
+            if (shifted == 0) {
+                short target = (short)imm;
+                target = target << 2;
+                NEXT_STATE.PC = CURRENT_STATE.PC + target;
+            }
+            else {
+                NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+            }
+        }
+        else if (op == 0x1 & rt == 0x11) { //BGEZAL
+            NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
+
+            int shifted = CURRENT_STATE.REGS[rs] >> 31;
+            if (shifted == 0) {
+                short target = (short)imm;
+                target = target << 2;
+                NEXT_STATE.PC = CURRENT_STATE.PC + target;
+            }
+            else {
+                NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+            }
         }
     }
 }
 
 /* questions
-
-Do we need to handle overflow exceptions in any of the ADD functions? What about signs? NO, typecast
-What exactly does task 1.1 mean? Just write your own test
-Do we have to check if the program is trying to change register zero? 
-What does the 32-bit alginment thing mean? 
-
+     do i need to do sign extension
+     how does the branch delay slot work?
+     git
 */
 
