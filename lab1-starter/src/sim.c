@@ -34,9 +34,9 @@ void process_instruction()
 
 /* questions
 
-Do we need to handle overflow exceptions in any of the ADD functions? What about signs?
-What exactly does task 1.1 mean?
-Do we have to check if the program is trying to change register zero?
+Do we need to handle overflow exceptions in any of the ADD functions? What about signs? NO, typecast
+What exactly does task 1.1 mean? Just write your own test
+Do we have to check if the program is trying to change register zero? 
 What does the 32-bit alginment thing mean? 
 
 */
