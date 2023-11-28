@@ -33,6 +33,13 @@ void process_instruction()
             NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] & CURRENT_STATE.REGS[rt];
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
+        else if (function == 0x9) { //JALR
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.PC + 4;
+            NEXT_STATE.PC = CURRENT_STATE.REGS[rs];
+        }
+        else if (function = 0x8) { //JR
+            NEXT_STATE.PC = CURRENT_STATE.REGS[rs];
+        }
     }
 
     else { //NOT R-TYPE instructions 
@@ -50,7 +57,7 @@ void process_instruction()
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
         else if (op == 0xC) { //ANDI
-            NEXT_STATE.REGS[rt] = 0 || (imm & CURRENT_STATE.REGS[rs]);
+            NEXT_STATE.REGS[rt] = 0 | (imm & CURRENT_STATE.REGS[rs]);
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
         else if (op == 0x4) { //BEQ
@@ -87,6 +94,80 @@ void process_instruction()
                 NEXT_STATE.PC = CURRENT_STATE.PC + 4;
             }
         }
+        else if (op == 0x7 & rt == 0) { //BGTZ
+            int shifted = CURRENT_STATE.REGS[rs] >> 31;
+            if (shifted == 0 & CURRENT_STATE.REGS[rs] != 0) {
+                short target = (short)imm;
+                target = target << 2;
+                NEXT_STATE.PC = CURRENT_STATE.PC + target;
+            }
+            else {
+                NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+            }
+        }
+        else if (op == 0x6 & rt == 0) { //BLEZ
+            int shifted = CURRENT_STATE.REGS[rs] >> 31;
+            if (shifted == 1 | CURRENT_STATE.REGS[rs] == 0) {
+                short target = (short)imm;
+                target = target << 2;
+                NEXT_STATE.PC = CURRENT_STATE.PC + target;
+            }
+            else {
+                NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+            }
+        }
+        else if (op == 0x6 & rt == 0) { //BLTZ
+            int shifted = CURRENT_STATE.REGS[rs] >> 31;
+            if (shifted == 1) {
+                short target = (short)imm;
+                target = target << 2;
+                NEXT_STATE.PC = CURRENT_STATE.PC + target;
+            }
+            else {
+                NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+            }
+        }
+        else if (op == 0x6 & rt == 0) { //BLTZAL
+            NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
+
+            int shifted = CURRENT_STATE.REGS[rs] >> 31;
+            if (shifted == 1) {
+                short target = (short)imm;
+                target = target << 2;
+                NEXT_STATE.PC = CURRENT_STATE.PC + target;
+            }
+            else {
+                NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+            }
+        }
+        else if (op == 0x5) { //BNE
+            if (CURRENT_STATE.REGS[rs] != CURRENT_STATE.REGS[rt]) {
+                short target = (short)imm;
+                target = target << 2;
+                NEXT_STATE.PC = CURRENT_STATE.PC + target;
+            }
+            else {
+                NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
+            }
+        }
+        else if (op == 0x20) { //LB
+
+        }
+        else if (op == 023) { //LW
+            int vAddr = CURRENT_STATE.REGS[rs] + imm;
+        }
+        else { //JUMPS
+            unsigned int target = CURRENT_STATE.PC & 0x3FFFFFF; //mask of 26 1's
+
+            if (op == 0x2) { //J
+                NEXT_STATE.PC = (CURRENT_STATE.PC & 0xF0000000) | target << 2;
+            }
+            else if (op == 0x3) { //JAL
+                NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
+
+                NEXT_STATE.PC = (CURRENT_STATE.PC & 0xF0000000) | target << 2;
+            }
+        }
     }
 }
 
@@ -95,4 +176,3 @@ void process_instruction()
      how does the branch delay slot work?
      git
 */
-
