@@ -40,6 +40,20 @@ void process_instruction()
         else if (function = 0x8) { //JR
             NEXT_STATE.PC = CURRENT_STATE.REGS[rs];
         }
+        else if (function == 0x10) { //MFHI
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.HI;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x12) { //MFLO
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.LO;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x18) { //MULT
+            long mult = CURRENT_STATE.REGS[rs] * CURRENT_STATE.REGS[rt];
+            NEXT_STATE.LO = mult;
+            NEXT_STATE.HI = mult >> 32;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
     }
 
     else { //NOT R-TYPE instructions 
@@ -150,11 +164,10 @@ void process_instruction()
                 NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
             }
         }
-        else if (op == 0x20) { //LB
-
-        }
         else if (op == 023) { //LW
             int vAddr = CURRENT_STATE.REGS[rs] + imm;
+            CURRENT_STATE.REGS[rt] = mem_read_32(vAddr);
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
         else { //JUMPS
             unsigned int target = CURRENT_STATE.PC & 0x3FFFFFF; //mask of 26 1's
@@ -172,7 +185,6 @@ void process_instruction()
 }
 
 /* questions
-     do i need to do sign extension
-     how does the branch delay slot work?
-     git
+    does T+1 in link instructions matter?
+    how to check for MFHI and MFLO in t-1 and t-2/what does that mean
 */
