@@ -33,6 +33,21 @@ void process_instruction()
             NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] & CURRENT_STATE.REGS[rt];
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
+        else if (function == 0x1A) { //DIV
+            if (CURRENT_STATE.REGS[rt] != 0) {
+                NEXT_STATE.LO = CURRENT_STATE.REGS[rs] / CURRENT_STATE.REGS[rt];
+                NEXT_STATE.HI = CURRENT_STATE.REGS[rs] % CURRENT_STATE.REGS[rt];
+            } 
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function = 0x1B) { //DIVU
+            if (CURRENT_STATE.REGS[rt] != 0) {
+                unsigned int dividend = CURRENT_STATE.REGS[rs];
+                unsigned int divisor = CURRENT_STATE.REGS[rt];
+                NEXT_STATE.LO = dividend / divisor;
+                NEXT_STATE.HI = dividend % divisor;
+            }
+        }
         else if (function == 0x9) { //JALR
             NEXT_STATE.REGS[rd] = CURRENT_STATE.PC + 4;
             NEXT_STATE.PC = CURRENT_STATE.REGS[rs];
@@ -48,18 +63,48 @@ void process_instruction()
             NEXT_STATE.REGS[rd] = CURRENT_STATE.LO;
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
+        else if (function = 0x13) { //MTHI
+            NEXT_STATE.HI = CURRENT_STATE.REGS[rs];
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function = 0x13) { //MTLO
+            NEXT_STATE.LO = CURRENT_STATE.REGS[rs];
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
         else if (function == 0x18) { //MULT
             long mult = CURRENT_STATE.REGS[rs] * CURRENT_STATE.REGS[rt];
             NEXT_STATE.LO = mult;
             NEXT_STATE.HI = mult >> 32;
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
+        else if (function == 0x19) { //MULTU
+            unsigned int a = CURRENT_STATE.REGS[rs];
+            unsigned int b = CURRENT_STATE.REGS[rt];
+            long mult = a * b;
+            NEXT_STATE.LO = mult;
+            NEXT_STATE.HI = mult >> 32;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x27) { //NOR
+            NEXT_STATE.REGS[rd] = ~(CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt]);   
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x25) { //OR
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt];   
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+
     }
 
     else { //NOT R-TYPE instructions 
+        //decode current instruction
         int rs = (pc >> 21) & 0x1F;
         int rt = (pc >> 16) & 0x1F;
         unsigned short imm = pc & 0xFFFF;
+
+        //used in branch instructions
+        short target = (short)imm; 
+        target = target << 2;
 
         if (op == 0x8) { //ADDI
             NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + imm;
@@ -76,8 +121,6 @@ void process_instruction()
         }
         else if (op == 0x4) { //BEQ
             if (CURRENT_STATE.REGS[rs] == CURRENT_STATE.REGS[rt]) {
-                short target = (short)imm;
-                target = target << 2;
                 NEXT_STATE.PC = CURRENT_STATE.PC + target; 
             }
             else {
@@ -87,8 +130,6 @@ void process_instruction()
         else if (op == 0x1 & rt == 0x1) { //BGEZ
             int shifted = CURRENT_STATE.REGS[rs] >> 31;
             if (shifted == 0) {
-                short target = (short)imm;
-                target = target << 2;
                 NEXT_STATE.PC = CURRENT_STATE.PC + target;
             }
             else {
@@ -100,8 +141,6 @@ void process_instruction()
 
             int shifted = CURRENT_STATE.REGS[rs] >> 31;
             if (shifted == 0) {
-                short target = (short)imm;
-                target = target << 2;
                 NEXT_STATE.PC = CURRENT_STATE.PC + target;
             }
             else {
@@ -111,8 +150,6 @@ void process_instruction()
         else if (op == 0x7 & rt == 0) { //BGTZ
             int shifted = CURRENT_STATE.REGS[rs] >> 31;
             if (shifted == 0 & CURRENT_STATE.REGS[rs] != 0) {
-                short target = (short)imm;
-                target = target << 2;
                 NEXT_STATE.PC = CURRENT_STATE.PC + target;
             }
             else {
@@ -122,8 +159,6 @@ void process_instruction()
         else if (op == 0x6 & rt == 0) { //BLEZ
             int shifted = CURRENT_STATE.REGS[rs] >> 31;
             if (shifted == 1 | CURRENT_STATE.REGS[rs] == 0) {
-                short target = (short)imm;
-                target = target << 2;
                 NEXT_STATE.PC = CURRENT_STATE.PC + target;
             }
             else {
@@ -133,8 +168,6 @@ void process_instruction()
         else if (op == 0x6 & rt == 0) { //BLTZ
             int shifted = CURRENT_STATE.REGS[rs] >> 31;
             if (shifted == 1) {
-                short target = (short)imm;
-                target = target << 2;
                 NEXT_STATE.PC = CURRENT_STATE.PC + target;
             }
             else {
@@ -146,8 +179,6 @@ void process_instruction()
 
             int shifted = CURRENT_STATE.REGS[rs] >> 31;
             if (shifted == 1) {
-                short target = (short)imm;
-                target = target << 2;
                 NEXT_STATE.PC = CURRENT_STATE.PC + target;
             }
             else {
@@ -156,8 +187,6 @@ void process_instruction()
         }
         else if (op == 0x5) { //BNE
             if (CURRENT_STATE.REGS[rs] != CURRENT_STATE.REGS[rt]) {
-                short target = (short)imm;
-                target = target << 2;
                 NEXT_STATE.PC = CURRENT_STATE.PC + target;
             }
             else {
@@ -186,5 +215,9 @@ void process_instruction()
 
 /* questions
     does T+1 in link instructions matter?
-    how to check for MFHI and MFLO in t-1 and t-2/what does that mean
+    how to check for MFHI and MFLO in t-1 and t-2/what does that mean exactly
+    do we only modify NEXT_STATE values?
+    what exactly does 0 || GPR mean?
+    what does No overflow exception occurs under any circumstances mean?
+    
 */
