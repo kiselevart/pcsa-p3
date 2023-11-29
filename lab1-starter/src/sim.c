@@ -93,7 +93,69 @@ void process_instruction()
             NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] | CURRENT_STATE.REGS[rt];   
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
-
+        else if (function == 0x0) { //SLL 
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] << sa;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x4) { //SLLV
+            int shift = CURRENT_STATE.REGS[rs] & 0x1F; //five bit mask
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] << shift;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x2A) { //SLT
+            if (CURRENT_STATE.REGS[rs] < CURRENT_STATE.REGS[rt]) {
+                NEXT_STATE.REGS[rd] = 0x1;
+            }
+            else {
+                NEXT_STATE.REGS[rd] = 0x0;
+            }
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x2B) { //SLTU
+            if ((unsigned)CURRENT_STATE.REGS[rs] < (unsigned)CURRENT_STATE.REGS[rt]) {
+                NEXT_STATE.REGS[rd] = 0x1;
+            }
+            else {
+                NEXT_STATE.REGS[rd] = 0x0;
+            }
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x3) {
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] >> sa;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x7) { //SRAV
+            int shift = CURRENT_STATE.REGS[rs] & 0x1F; //five bit mask
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] >> shift;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x2) { //SRL
+            NEXT_STATE.REGS[rd] = (unsigned)CURRENT_STATE.REGS[rt] >> sa;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x6) { //SRLV
+            int shift = CURRENT_STATE.REGS[rs] & 0x1F; //five bit mask
+            NEXT_STATE.REGS[rd] = (unsigned)CURRENT_STATE.REGS[rt] >> sa;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x22) { //SUB
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x23) { //SUBU
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0xC) { //SYSCALL
+            if (CURRENT_STATE.REGS[2] == 0x0A) {
+                RUN_BIT = FALSE;
+            }
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (function == 0x26) { //XOR
+            NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] ^ CURRENT_STATE.REGS[rt];
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
     }
 
     else { //NOT R-TYPE instructions 
@@ -193,9 +255,62 @@ void process_instruction()
                 NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
             }
         }
-        else if (op == 023) { //LW
+        else if (op == 0x20) { //LB
+
+        }
+        else if (op == 0x24) { //LBU
+
+        }
+        else if (op == 0x21) { //LH
+
+        }
+        else if (op == 0x25) { //LHU
+        
+        }
+        else if (op == 0xF) { //LUI
+            NEXT_STATE.REGS[rt] == imm << 16;
+        }
+        else if (op == 0x23) { //LW
+            //NOT SURE ABOUT THIS ONE
             int vAddr = CURRENT_STATE.REGS[rs] + imm;
-            CURRENT_STATE.REGS[rt] = mem_read_32(vAddr);
+            NEXT_STATE.REGS[rt] = mem_read_32(vAddr);
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (op == 0x13) { //ORI
+            NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] | imm;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (op == 0x28) { //SB
+
+        }
+        else if (op == 0x29) { //SH
+        
+        }
+        else if (op == 0xA) { //SLTI
+            if (CURRENT_STATE.REGS[rs] < (short)imm) {
+                NEXT_STATE.REGS[rt] = 0x1;
+            }
+            else {
+                NEXT_STATE.REGS[rt] = 0x0;
+            }
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (op == 0xB) { //SLTIU
+            if ((unsigned)CURRENT_STATE.REGS[rs] < (short)imm) {
+                NEXT_STATE.REGS[rt] = 0x1;
+            }
+            else {
+                NEXT_STATE.REGS[rt] = 0x0;
+            }
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (op == 0x2B) { //SW
+            unsigned int vAddr = CURRENT_STATE.REGS[rs] + imm;
+            mem_write_32(vAddr, CURRENT_STATE.REGS[rt]);
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+        else if (op == 0xE) { //XOR
+            NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] ^ imm; 
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
         else { //JUMPS
@@ -214,10 +329,5 @@ void process_instruction()
 }
 
 /* questions
-    does T+1 in link instructions matter?
-    how to check for MFHI and MFLO in t-1 and t-2/what does that mean exactly
-    do we only modify NEXT_STATE values?
-    what exactly does 0 || GPR mean?
-    what does No overflow exception occurs under any circumstances mean?
-    
+
 */
