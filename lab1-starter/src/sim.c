@@ -69,6 +69,10 @@ void process_instruction()
         int rd = (pc >> 11) & 0x1F;
         int sa = (pc >> 6) & 0x1F;
         printf("function is: %0x\n", function);
+        printf("rs is %d\n",rs);
+        printf("rt is %d\n",rt);
+        printf("rd is %d\n",rd);
+        printf("sa is %d\n",sa);
 
         if (function == ADD) { 
             printf("ADD\n");
@@ -244,6 +248,10 @@ void process_instruction()
         //used in branch instructions
         short target = (short)imm; 
         target = target << 2;
+        printf("rs is %d\n",rs);
+        printf("rt is %d\n",rt);
+        printf("imm is %d\n", imm);
+        printf("target is %d\n", target);
 
         if (op == ADDI) { 
             printf("ADDI\n");
@@ -362,6 +370,7 @@ void process_instruction()
         else if (op == LUI) { 
             printf("LUI\n");
             NEXT_STATE.REGS[rt] = imm << 16;
+            NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
         }
         else if (op == LW) { 
             printf("LW\n");
@@ -415,17 +424,17 @@ void process_instruction()
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
         else { //JUMPS
-            unsigned int target = CURRENT_STATE.PC & 0x3FFFFFF; //mask of 26 1's
+            unsigned int jtarget = CURRENT_STATE.PC & 0x3FFFFFF; //mask of 26 1's
 
             if (op == J) {
-            printf("J\n");
-                NEXT_STATE.PC = (CURRENT_STATE.PC & 0xF0000000) | target << 2;
+                printf("J\n");
+                NEXT_STATE.PC = (CURRENT_STATE.PC & 0xF0000000) | (jtarget << 2); 
             }
             else if (op == JAL) {
             printf("JAL\n");
                 NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
 
-                NEXT_STATE.PC = (CURRENT_STATE.PC & 0xF0000000) | target << 2;
+                NEXT_STATE.PC = (CURRENT_STATE.PC & 0xF0000000) |  (jtarget << 2);
             }
         }
     }
