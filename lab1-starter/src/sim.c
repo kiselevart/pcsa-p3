@@ -441,5 +441,12 @@ void process_instruction()
 }
 
 /* questions
-
+    how to debug the jump instructions, is it possible to see the assembly address i need to jump to
+    how to calculate the address for load and store
+    
+    answers
+    the pc should not be quadrupled after a jump, it should just go number of instructions away from current * 4
+    so check the shifting logic for that
+    store is basically just value in base register + imm, and use that as the address to store to
+    load same thing just load the data from that address in
 */
