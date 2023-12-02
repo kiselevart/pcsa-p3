@@ -41,7 +41,7 @@
 #define LHU 0x25
 #define LUI 0xF
 #define LW 0x23
-#define ORI 0x13
+#define ORI 0xD
 #define SB 0x28
 #define SH 0x29
 #define SLTI 0xA
@@ -57,9 +57,11 @@ void process_instruction()
      * values in NEXT_STATE. You can call mem_read_32() and mem_write_32() to
      * access memory. */
 
-    printf("%d\n", CURRENT_STATE.PC);
+    
     unsigned int pc = mem_read_32(CURRENT_STATE.PC); 
     int op = pc >> 26;
+    printf("PC: %0x\n", CURRENT_STATE.PC);
+    printf("%0x\n", pc);
     printf("The Opcode is: %0x\n", op);
 
     if (op == 0) { //R-TYPE instructions
@@ -69,10 +71,10 @@ void process_instruction()
         int rd = (pc >> 11) & 0x1F;
         int sa = (pc >> 6) & 0x1F;
         printf("function is: %0x\n", function);
-        printf("rs is %d\n",rs);
-        printf("rt is %d\n",rt);
-        printf("rd is %d\n",rd);
-        printf("sa is %d\n",sa);
+        printf("rs is %0x\n",rs);
+        printf("rt is %0x\n",rt);
+        printf("rd is %0x\n",rd);
+        printf("sa is %0x\n",sa);
 
         if (function == ADD) { 
             printf("ADD\n");
@@ -243,15 +245,15 @@ void process_instruction()
         //decode current instruction
         int rs = (pc >> 21) & 0x1F;
         int rt = (pc >> 16) & 0x1F;
-        unsigned short imm = pc & 0xFFFF;
+        short imm = pc & 0xFFFF;
 
         //used in branch instructions
         short target = (short)imm; 
         target = target << 2;
-        printf("rs is %d\n",rs);
-        printf("rt is %d\n",rt);
-        printf("imm is %d\n", imm);
-        printf("target is %d\n", target);
+        printf("rs is %0x\n",rs);
+        printf("rt is %0x\n",rt);
+        printf("imm is %0x\n", imm);
+        printf("target is %0x\n", target);
 
         if (op == ADDI) { 
             printf("ADDI\n");
@@ -330,10 +332,9 @@ void process_instruction()
                 NEXT_STATE.PC = CURRENT_STATE.PC + 4;
             }
         }
-        else if (op == 0x6 & rt == 0x10) { //BLTZAL
+        else if (op == 0x1 & rt == 0x10) { //BLTZAL
             printf("BLTZAL\n");
             NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
-
             int shifted = CURRENT_STATE.REGS[rs] >> 31;
             if (shifted == 1) {
                 NEXT_STATE.PC = CURRENT_STATE.PC + target;
@@ -424,17 +425,18 @@ void process_instruction()
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
         }
         else { //JUMPS
-            unsigned int jtarget = CURRENT_STATE.PC & 0x3FFFFFF; //mask of 26 1's
-
+            unsigned int jtarget = pc & 0x3FFFFFF;
+            jtarget = jtarget << 2;
+            printf("jtarget is %0x\n", jtarget);
             if (op == J) {
                 printf("J\n");
-                NEXT_STATE.PC = (CURRENT_STATE.PC & 0xF0000000) | (jtarget << 2); 
+                NEXT_STATE.PC = jtarget; 
             }
             else if (op == JAL) {
             printf("JAL\n");
                 NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
 
-                NEXT_STATE.PC = (CURRENT_STATE.PC & 0xF0000000) |  (jtarget << 2);
+                NEXT_STATE.PC = jtarget;
             }
         }
     }

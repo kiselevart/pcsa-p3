@@ -2,14 +2,14 @@
 	.text
 
 main:
-        addiu $v0, $zero, 0xa
+        addiu $v0, $zero, 0xa 
 l_0:    
-        addiu $5, $zero, 1
-        j l_1
-        addiu $10, $10, 0xf00
-        ori $0, $0, 0
-        ori $0, $0, 0
-        addiu $5, $zero, 100
+        addiu $5, $zero, 1 
+        j l_1 
+        addiu $10, $10, 0xf00 
+        ori $0, $0, 0 
+        ori $0, $0, 0 
+        addiu $5, $zero, 100 
         syscall        
 l_1:
         bne $zero, $zero, l_3
@@ -28,7 +28,7 @@ l_3:
         addiu $8, $zero, 0x347
         syscall
 l_4:
-        addiu $7, $zero, 0xd00d
+        addiu $7, $zero, 0xd00
         syscall
         
          
